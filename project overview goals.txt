@@ -1,0 +1,50 @@
+BEACON_AI: Project Overview & Goals
+===================================
+
+1. CORE MISSION
+---------------
+To build a powerful, resilient, and privacy-focused Personal AI ecosystem ("BEACON") that empowers Micheal LaCourse to manage his family, finances, faith, and future efficiently. The system prioritizes local control, strictly curated biblical data, and practical home automation.
+
+2. DUAL-AGENT STRATEGY
+----------------------
+The system is divided into two distinct personalities/modules:
+
+A. GENERAL AI ("The Office Manager" / "HomeOS")
+   *   **Goal:** Efficiency, Automation, & Knowledge.
+   *   **Personality:** Professional, helpful, resourceful.
+   *   **Permissions:** Open internet access (via API), Google Workspace access (Calendar, Budget, Docs).
+   *   **Key Domains:**
+       *   **Productivity:** Daily briefings, scheduling, budget tracking.
+       *   **Family:** Location tracking, vehicle maintenance, pantry/shopping management.
+       *   **Knowledge:** Boy Scout Merit Badges, Survival Skills, General News.
+       *   **Media:** YouTube summarization, News aggregation.
+
+B. BIBLICAL AI ("The Strict Scholar")
+   *   **Goal:** Truth, History, & Purity.
+   *   **Personality:** Serious, precise, historical.
+   *   **Permissions:** RESTRICTED. No modern theology. No "popular" internet Christianity.
+   *   **Key Domains:**
+       *   **Scripture:** KJV Bible, Apocrypha.
+       *   **History:** Early Church Fathers (Pre-1000 AD).
+       *   **Calendar:** Calculation of Biblical Feast Days using astronomical data (Moon/Equinox).
+
+3. HARDWARE ARCHITECTURE
+------------------------
+*   **Primary Node (Controller):** Windows Laptop (MSI GS66). Handles heavy AI processing, coding, and primary interface.
+*   **Always-On Node (Server):** Raspberry Pi 4/5. Runs 24/7 background tasks (Cron jobs, Home Assistant, Daily Briefing generation).
+*   **Storage:** 5TB External Drive attached to Pi for massive data storage (Media, Models, Backups).
+*   **Mobile:** iPhone access via Web Dashboard (Flask/Streamlit).
+
+4. EXPANSION MODULES (NEW)
+--------------------------
+*   **Vision Processor:** OCR for digitizing paper documents (grades, mail) and object detection for pantry inventory.
+*   **Kitchen Manager:** "Smart Kitchen" system for recipe searching, pantry tracking, and automated shopping lists (Walmart/Amazon integration).
+*   **Family Tracker:** Dashboard for family GPS location and vehicle health/maintenance logs.
+*   **Media Agent:** Automated scraper for daily news and YouTube video summarizer to save time.
+
+5. IMMEDIATE GOALS
+------------------
+1.  **Stabilize Google Integration:** Ensure Budget and Calendar tools work flawlessly without quota errors.
+2.  **Clean Knowledge Base:** Sanitize all text inputs (remove HTML/junk) for high-quality RAG.
+3.  **Build Skeletons:** Implement the structure for the new Vision, Kitchen, and Media modules.
+4.  **Deploy Mobile View:** Create a simple web view for checking the system status from a phone.

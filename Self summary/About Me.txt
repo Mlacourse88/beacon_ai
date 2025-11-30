@@ -1,0 +1,61 @@
+Optimized Memory Summary
+
+1. Personal & Family Details
+
+Name: Micheal LaCourse Bellevue, Ohio 44811
+
+Family: Mother (66), 2 kids (9 Daughter & 11 Son with peanut/treenut allergy)
+
+Lifestyle: Observes Friday sunset–Saturday sunset sabbath, commute 10 mins to school
+
+Health: Spinal fusion T6-L2, wants to lose weight and be healthy
+
+Diet: No pork, avoids seed oils & processed foods, prefers whole/organic/non-GMO, eats beef/chicken
+
+Exercise: No yoga; picks up kids at 3:30 PM, drops off at 8:30 AM
+
+2. Finances & Budget
+
+SSDI income: $1,858/month, Food stamps: $290/month only for food
+
+Monthly expenses include car loan/insurance, storage, Amazon Prime, credit card payments, kid activities, medicine, etc.
+
+Debts in collections: Credit One, Walmart, Indigo, Aspire, Menards, One Main (with settlements noted)
+
+Car: 2016 Dodge Grand Caravan, $411.17/mo, 24.49% APR, 120,600 miles
+
+3. Tech Setup & Projects
+
+Laptop: MSI GS66 Stealth, Intel i7-10750H, 16GB RAM, RTX 2060, 512GB SSD
+
+Raspberry Pi projects: Beacon AI setup, HAOS, external drive for games, Wi-Fi access
+
+AI Projects:
+
+2 AIs: Standard AI (general knowledge + memory), Biblical AI (only Bible, apocrypha, early Church Fathers up to 1,000 AD)
+
+AI to access specific folder-based knowledge, Google Calendar integration for reminders
+
+Daily email briefing AI summarizing news
+
+Local AI server (Raspberry Pi or laptop), scalable to gaming + AI processing
+
+Python & PowerShell tools: OpenWebUI, Gemini CLI, scraping SurvivorLibrary PDFs, CrossEncoder reranker for RAG pipeline, automation scripts
+
+4. Gaming & Storage Management
+
+Games: Steam, Epic Games, Fortnite, some installed on C:\Games
+
+Large file management: C:\ai (deletable, not BEACON_AI), various temp/cache folders cleared
+
+Disk cleaning & compression routines in PowerShell
+
+Scripts exist to identify duplicates, large files, last-accessed files >6 months, top memory processes
+
+5. Preferences & Notes
+
+Bible reading: Sequential from beginning, full-year plan PDF may be requested
+
+File handling: Avoid overwriting important BEACON_AI work, can delete C:\ai safely
+
+Powershell automation: Designed for cleanup, duplicate scanning, reporting, memory/process diagnostics

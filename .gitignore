@@ -1,0 +1,47 @@
+# Secrets & API Keys
+.env
+service_account_key.json
+geminicli_oauth_credentials.json
+token.json
+google_config.json
+
+# System & Environment
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+.vscode/
+.idea/
+.git/
+
+# Frontend/Node (CRITICAL TO IGNORE)
+node_modules/
+dist/
+.DS_Store
+
+# Large Data & Indexes
+faiss_indexes/
+embeddings/
+general_ai/data/
+general_ai/vision_input/
+biblical_ai/calendar_data/
+
+# Content / Knowledge Bases
+*.pdf
+biblical_ai/PDFs_Raw_Text/
+biblical_ai/KB/
+general_ai/knowledge_base/
+
+# Logs & Temp
+*.log
+deleted_lines_log.txt
+audit_report.txt
+audit_evidence.csv
+
+# Large Media
+*.mp4
+*.mp3
+*.mov
+*.avi
+*.iso
+*.img
