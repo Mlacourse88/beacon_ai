@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-title" content="BEACON OS">
+
+    <title>BEACON OS // GALACTIC</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Sci-Fi Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Teko:wght@600&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- CORE THEME --- */
+        :root {
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+            
+            /* DEFAULT MODE (TACTICAL) */
+            --primary: #00f0ff; /* Cyan */
+            --secondary: #00ff41; /* Green */
+            --alert: #ff2a2a;     /* Red */
+            --bg-dark: #000508;
+            --panel: rgba(0, 20, 30, 0.85);
+            --border: rgba(0, 240, 255, 0.3);
+        }
+
+        /* SABBATH MODE OVERRIDES */
+        body.mode-sabbath {
+            --primary: #ffc800; /* Gold */
+            --secondary: #ff9d00; /* Amber */
+            --alert: #ff4500; /* Deep Orange */
+            --border: rgba(255, 200, 0, 0.3);
+            --panel: rgba(30, 20, 0, 0.85);
+        }
+
+        body {
+            background-color: #000;
+            color: var(--primary);
+            font-family: 'Share Tech Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* --- UI COMPONENTS --- */
+        
+        /* Scanline Overlay */
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(rgba(0,0,0,0) 50%, rgba(0,0,0,0.2) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.4;
+        }
+
+        /* Tech Panel (Standard Card) */
+        .tech-panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            position: relative;
+            backdrop-filter: blur(8px);
+        }
+        /* Corner Decorations */
+        .tech-panel::before, .tech-panel::after {
+            content: ''; position: absolute; width: 6px; height: 6px; transition: all 0.3s;
+        }
+        .tech-panel::before { top: -1px; left: -1px; border-top: 2px solid var(--primary); border-left: 2px solid var(--primary); }
+        .tech-panel::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--primary); border-right: 2px solid var(--primary); }
+
+        /* Typography */
+        .font-header { font-family: 'Orbitron', sans-serif; }
+        .font-data { font-family: 'Teko', sans-serif; }
+        
+        .glow-text { text-shadow: 0 0 8px var(--border); }
+
+        /* Buttons */
+        .btn-action {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-action:active { background: var(--primary); color: #000; }
+        .btn-action:disabled { opacity: 0.3; filter: grayscale(1); border-color: #555; pointer-events: none; }
+
+        /* Inputs */
+        .tech-input {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 8px;
+            font-family: 'Share Tech Mono', monospace;
+            outline: none;
+        }
+        .tech-input:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--border); }
+
+        /* --- LAYOUT STRUCTURE --- */
+        #app-root {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+        }
+
+        #main-view {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            padding-bottom: 80px; /* Space for nav */
+        }
+
+        /* --- NAVIGATION --- */
+        .bottom-nav {
+            height: 70px;
+            background: rgba(0, 0, 0, 0.95);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 10px; /* Lift for iPhone Home Bar */
+            z-index: 50;
+        }
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.5;
+            transition: 0.2s;
+            font-size: 10px;
+        }
+        .nav-tab.active { opacity: 1; color: var(--primary); text-shadow: 0 0 10px var(--border); }
+        .nav-tab i { font-size: 20px; margin-bottom: 4px; }
+
+        /* --- CHAT BUBBLES --- */
+        .msg-user { align-self: flex-end; background: rgba(0, 255, 65, 0.15); border: 1px solid var(--secondary); text-align: right; border-radius: 8px 8px 0 8px; }
+        .msg-ai { align-self: flex-start; background: rgba(0, 240, 255, 0.1); border: 1px solid var(--primary); text-align: left; border-radius: 8px 8px 8px 0; }
+        
+        /* Sabbath Specifics */
+        .sabbath-banner {
+            background: #ffc800; color: black; font-weight: bold;
+            text-align: center; font-size: 10px; letter-spacing: 2px;
+            padding: 2px; display: none;
+        }
+        body.mode-sabbath .sabbath-banner { display: block; }
+
+        /* Markdown-like styling for AI response */
+        .ai-markdown h1, .ai-markdown h2 { font-weight: bold; color: var(--secondary); margin-top: 4px; }
+        .ai-markdown ul { list-style: disc; padding-left: 15px; }
+        .ai-markdown strong { color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <canvas id="starfield" class="fixed inset-0 -z-10"></canvas>
+
+    <div id="app-root">
+        
+        <!-- A. TOP HEADER -->
+        <header class="flex justify-between items-center px-4 py-3 bg-black/90 border-b border-[var(--border)] z-20">
+            <!-- Left: Status -->
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full bg-[var(--secondary)] animate-pulse shadow-[0_0_8px_var(--secondary)]"></div>
+                <span class="text-[10px] tracking-widest opacity-70">ONLINE</span>
+            </div>
+            
+            <!-- Center: Logo -->
+            <div class="font-header text-xl font-bold tracking-widest glow-text">
+                BEACON <span class="text-[var(--secondary)]">OS</span>
+            </div>
+
+            <!-- Right: Mode / Settings -->
+            <div class="flex items-center gap-4">
+                <div id="mode-icon" class="text-xl">🤖</div>
+                <i class="fa-solid fa-gear text-sm opacity-50" onclick="toggleSettings()"></i>
+            </div>
+        </header>
+
+        <!-- SABBATH BANNER -->
+        <div class="sabbath-banner font-header">
+            ⚠️ SABBATH OBSERVATION ACTIVE // COMMERCE OFFLINE
+        </div>
+
+        <!-- MAIN CONTENT AREA -->
+        <main id="main-view" class="p-4 hide-scrollbar">
+
+            <!-- VIEW 1: SQUAD (Gamification) -->
+            <section id="view-squad" class="space-y-4 animate-fade-in">
+                <!-- Leaderboard -->
+                <div class="space-y-3">
+                    <!-- Michael -->
+                    <div class="tech-panel p-3 flex items-center gap-3">
+                        <div class="w-12 h-12 border border-cyan-500 bg-cyan-900/30 flex items-center justify-center text-xl">👨‍✈️</div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-end">
+                                <span class="font-header font-bold text-white">MICHAEL</span>
+                                <span class="text-[10px] text-cyan-400">LVL 50 COMMANDER</span>
+                            </div>
+                            <!-- XP Bar -->
+                            <div class="w-full h-2 bg-gray-800 mt-1 rounded-sm overflow-hidden">
+                                <div class="h-full bg-cyan-500 w-[85%] shadow-[0_0_10px_cyan]"></div>
+                            </div>
+                            <div class="flex justify-between text-[9px] mt-1 opacity-70">
+                                <span>XP: 4500/5000</span>
+                                <span>🔥 Streak: 12 Days</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hunter -->
+                    <div class="tech-panel p-3 flex items-center gap-3">
+                        <div class="w-12 h-12 border border-purple-500 bg-purple-900/30 flex items-center justify-center text-xl">🛡️</div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-end">
+                                <span class="font-header font-bold text-white">HUNTER</span>
+                                <span class="text-[10px] text-purple-400">LVL 12 GUARDIAN</span>
+                            </div>
+                            <div class="w-full h-2 bg-gray-800 mt-1 rounded-sm overflow-hidden">
+                                <div class="h-full bg-purple-500 w-[60%] shadow-[0_0_10px_purple]"></div>
+                            </div>
+                            <div class="flex justify-between text-[9px] mt-1 opacity-70">
+                                <span>XP: 1200/2000</span>
+                                <span>🏅 Badges: 4</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fiona -->
+                    <div class="tech-panel p-3 flex items-center gap-3">
+                        <div class="w-12 h-12 border border-pink-500 bg-pink-900/30 flex items-center justify-center text-xl">📚</div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-end">
+                                <span class="font-header font-bold text-white">FIONA</span>
+                                <span class="text-[10px] text-pink-400">LVL 8 SCHOLAR</span>
+                            </div>
+                            <div class="w-full h-2 bg-gray-800 mt-1 rounded-sm overflow-hidden">
+                                <div class="h-full bg-pink-500 w-[40%] shadow-[0_0_10px_pink]"></div>
+                            </div>
+                            <div class="flex justify-between text-[9px] mt-1 opacity-70">
+                                <span>XP: 800/2000</span>
+                                <span>🏅 Badges: 7</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Menu -->
+                <div class="grid grid-cols-2 gap-3 mt-6">
+                    <button class="btn-action py-4" onclick="toggleTaskModal()">
+                        <i class="fa-solid fa-brain"></i> Log Task (AI)
+                    </button>
+                    <button class="btn-action py-4" onclick="alert('Badge Grid Unlocked')">
+                        <i class="fa-solid fa-medal"></i> Badges
+                    </button>
+                    <button class="btn-action py-4 col-span-2 commerce-btn" onclick="alert('Marketplace Open')">
+                        <i class="fa-solid fa-cart-shopping"></i> Marketplace
+                    </button>
+                </div>
+            </section>
+
+
+            <!-- VIEW 2: COMMS (Chat) -->
+            <section id="view-comms" class="hidden h-full flex flex-col">
+                <!-- Mode Toggle -->
+                <div id="ai-toggle-container" class="flex justify-center mb-4">
+                    <div class="bg-gray-900 p-1 rounded-full border border-gray-700 flex text-[10px] font-bold">
+                        <button onclick="setAiMode('auto')" class="px-4 py-1 rounded-full bg-[var(--primary)] text-black transition-all" id="mode-auto">AUTO</button>
+                        <button onclick="setAiMode('gen')" class="px-4 py-1 rounded-full text-gray-500 transition-all" id="mode-gen">GEN</button>
+                        <button onclick="setAiMode('bib')" class="px-4 py-1 rounded-full text-gray-500 transition-all" id="mode-bib">BIB</button>
+                    </div>
+                </div>
+
+                <!-- Chat Feed -->
+                <div id="chat-feed" class="flex-1 overflow-y-auto space-y-3 p-2 mb-20">
+                    <div class="msg-ai p-3 max-w-[80%] text-sm">
+                        <div class="text-[9px] opacity-50 mb-1">SYSTEM</div>
+                        Awaiting command. Channels open.
+                    </div>
+                </div>
+
+                <!-- Sticky Input Area -->
+                <div class="fixed bottom-[70px] left-0 w-full bg-black border-t border-[var(--border)] p-2 flex gap-2 items-center z-40">
+                    <button class="w-10 h-10 border border-[var(--primary)] rounded text-[var(--primary)] flex items-center justify-center">
+                        <i class="fa-solid fa-camera"></i>
+                    </button>
+                    <input type="text" id="chat-input" placeholder="Transmit Command..." class="flex-1 bg-gray-900 border border-gray-700 rounded px-3 h-10 text-white focus:border-[var(--primary)] outline-none text-sm font-mono">
+                    <button onclick="sendMessage()" class="w-10 h-10 bg-[var(--primary)] text-black rounded flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </section>
+
+
+            <!-- VIEW 3: OPS (Map & Vehicle) -->
+            <section id="view-ops" class="hidden space-y-4">
+                <!-- Map Widget (Stylized) -->
+                <div class="tech-panel h-64 relative overflow-hidden flex flex-col">
+                    <div class="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')] bg-cover opacity-20 filter invert"></div>
+                    <!-- Radar Rings -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-40 h-40 border border-[var(--primary)] rounded-full opacity-30"></div>
+                        <div class="w-20 h-20 border border-[var(--primary)] rounded-full opacity-50"></div>
+                    </div>
+                    <!-- Pins -->
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-4 -translate-y-6 flex flex-col items-center">
+                        <i class="fa-solid fa-house text-[var(--secondary)] text-xl drop-shadow-[0_0_5px_var(--secondary)]"></i>
+                        <span class="text-[9px] bg-black/50 px-1 rounded text-[var(--secondary)]">DAD @ HOME</span>
+                    </div>
+                    
+                    <div class="mt-auto bg-black/80 p-2 border-t border-[var(--border)] flex justify-between text-[10px]">
+                        <span><i class="fa-solid fa-satellite"></i> GPS: ACTIVE</span>
+                        <span>LIFE360: SYNCED</span>
+                    </div>
+                </div>
+
+                <!-- Vehicle Telemetry -->
+                <div class="tech-panel p-4">
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
+                        <div>
+                            <h3 class="font-header font-bold text-lg">DODGE GRAND CARAVAN</h3>
+                            <div class="text-[10px] opacity-70">VIN: *****8291</div>
+                        </div>
+                        <div class="text-[var(--secondary)] text-2xl"><i class="fa-solid fa-van-shuttle"></i></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="text-center">
+                            <div class="text-[10px] text-gray-400 uppercase">Odometer</div>
+                            <div class="font-data text-xl text-white">120,600</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-[10px] text-gray-400 uppercase">Health</div>
+                            <div class="font-header font-bold text-[var(--secondary)]">OPTIMAL</div>
+                        </div>
+                    </div>
+
+                    <button onclick="toggleTripModal()" class="btn-action w-full py-2 text-sm">
+                        <i class="fa-solid fa-route"></i> Log Trip (AI)
+                    </button>
+                </div>
+            </section>
+
+
+            <!-- VIEW 4: TOOLS (Grid) -->
+            <section id="view-tools" class="hidden">
+                <div class="grid grid-cols-2 gap-3">
+                    
+                    <!-- CFO -->
+                    <div class="tech-panel p-4 flex flex-col gap-2 commerce-btn">
+                        <div class="flex justify-between text-[var(--primary)]">
+                            <i class="fa-solid fa-coins text-2xl"></i>
+                            <span class="text-[9px] border border-[var(--primary)] px-1 rounded">CFO</span>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-gray-400">SAFE-TO-SPEND</div>
+                            <div class="font-data text-3xl text-white">$42.50</div>
+                        </div>
+                        <button onclick="toggleCfoModal()" class="btn-action text-xs py-1 mt-auto">
+                           <i class="fa-solid fa-scale-balanced"></i> Analyze Spend
+                        </button>
+                    </div>
+
+                    <!-- Kitchen OS -->
+                    <div class="tech-panel p-4 flex flex-col gap-2 commerce-btn">
+                         <div class="flex justify-between text-orange-400">
+                            <i class="fa-solid fa-utensils text-2xl"></i>
+                            <span class="text-[9px] border border-orange-400 px-1 rounded">KITCHEN</span>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-red-400">LOW STOCK (3)</div>
+                            <ul id="pantry-list" class="text-[10px] text-gray-300 list-disc list-inside">
+                                <li>Milk</li>
+                                <li>Eggs</li>
+                                <li>Bread</li>
+                            </ul>
+                        </div>
+                        <button onclick="generateRations()" class="btn-action text-xs py-1 mt-2 text-orange-400 border-orange-400">
+                            <i class="fa-solid fa-utensils"></i> Ration Plan
+                        </button>
+                    </div>
+
+                    <!-- The Vault -->
+                    <div class="tech-panel p-4 flex flex-col gap-2">
+                        <div class="flex justify-between text-blue-400">
+                            <i class="fa-solid fa-book text-2xl"></i>
+                            <span class="text-[9px] border border-blue-400 px-1 rounded">VAULT</span>
+                        </div>
+                         <div class="text-[10px] text-gray-400 mt-1">Manuals & Docs</div>
+                         <div class="h-1 bg-gray-800 w-full rounded"><div class="h-full bg-blue-400 w-1/2"></div></div>
+                         <button onclick="toggleVaultModal()" class="btn-action text-xs py-1 mt-auto text-blue-400 border-blue-400">
+                            <i class="fa-solid fa-database"></i> Query Archive
+                        </button>
+                    </div>
+
+                    <!-- Sentry -->
+                    <div class="tech-panel p-4 flex flex-col gap-2">
+                        <div class="flex justify-between text-[var(--alert)]">
+                            <i class="fa-solid fa-shield-halved text-2xl"></i>
+                            <span class="text-[9px] border border-[var(--alert)] px-1 rounded">SENTRY</span>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-[var(--secondary)]">NETWORK SECURE</div>
+                            <div class="font-data text-white text-xl">14 DEVICES</div>
+                        </div>
+                        <button onclick="runSentryScan()" class="btn-action text-xs py-1 mt-auto text-[var(--alert)] border-[var(--alert)]">
+                            <i class="fa-solid fa-radar"></i> Threat Scan
+                        </button>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+
+        <!-- B. BOTTOM NAV -->
+        <nav class="bottom-nav">
+            <div class="nav-tab active" onclick="nav('squad', this)">
+                <i class="fa-solid fa-shield-cat"></i>
+                <span>SQUAD</span>
+            </div>
+            <div class="nav-tab" onclick="nav('comms', this)">
+                <i class="fa-solid fa-comments"></i>
+                <span>COMMS</span>
+            </div>
+            <div class="nav-tab" onclick="nav('ops', this)">
+                <i class="fa-solid fa-map-location-dot"></i>
+                <span>OPS</span>
+            </div>
+            <div class="nav-tab" onclick="nav('tools', this)">
+                <i class="fa-solid fa-screwdriver-wrench"></i>
+                <span>TOOLS</span>
+            </div>
+        </nav>
+
+    </div>
+
+    <!-- SETTINGS MODAL (Hidden) -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="tech-panel w-full max-w-sm p-6 space-y-4">
+            <h2 class="font-header text-xl border-b border-gray-700 pb-2">SYSTEM CONFIG</h2>
+            <div>
+                <label class="text-xs text-gray-400">Gemini API Key</label>
+                <input type="password" id="api-key-input" class="w-full bg-black border border-gray-600 p-2 text-xs font-mono text-white mt-1" placeholder="Enter Key...">
+            </div>
+            <button onclick="localStorage.clear(); location.reload()" class="btn-action w-full py-2 text-[var(--alert)] border-[var(--alert)]">
+                <i class="fa-solid fa-triangle-exclamation"></i> FACTORY RESET
+            </button>
+            <button onclick="document.getElementById('settings-modal').classList.add('hidden')" class="btn-action w-full py-2">
+                CLOSE
+            </button>
+        </div>
+    </div>
+
+    <!-- TASK MODAL (AI) -->
+    <div id="task-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="tech-panel w-full max-w-sm p-6 space-y-4 border-l-4 border-l-[var(--secondary)]">
+            <h2 class="font-header text-xl">LOG OPERATION</h2>
+            <div class="text-xs text-gray-400">Describe your chore. Command AI will assess XP value.</div>
+            <input type="text" id="task-desc" class="tech-input w-full" placeholder="e.g. Cleaned the garage...">
+            
+            <div id="task-analysis" class="hidden p-3 bg-gray-900 border border-gray-700 text-xs space-y-2">
+                <div class="text-[var(--primary)] font-bold" id="task-title">ANALYZING...</div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">DIFFICULTY:</span>
+                    <span class="text-white" id="task-tier">--</span>
+                </div>
+                <div class="flex justify-between border-t border-gray-800 pt-1 mt-1">
+                    <span class="text-gray-400">REWARD:</span>
+                    <span class="text-[var(--secondary)] font-bold text-lg" id="task-xp">--</span>
+                </div>
+            </div>
+
+            <button onclick="analyzeTask()" class="btn-action w-full py-3" id="analyze-btn">
+                <i class="fa-solid fa-microchip"></i> ANALYZE
+            </button>
+            <button onclick="toggleTaskModal()" class="text-xs text-gray-500 w-full text-center hover:text-white">CANCEL</button>
+        </div>
+    </div>
+
+    <!-- TRIP MODAL (AI) - NEW -->
+    <div id="trip-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="tech-panel w-full max-w-sm p-6 space-y-4 border-l-4 border-l-[var(--primary)]">
+            <h2 class="font-header text-xl">MISSION VECTOR</h2>
+            <div class="text-xs text-gray-400">Input destination parameters for tactical analysis.</div>
+            <input type="text" id="trip-dest" class="tech-input w-full" placeholder="Destination...">
+            <input type="text" id="trip-purpose" class="tech-input w-full" placeholder="Purpose (e.g. Resupply)...">
+            
+            <div id="trip-analysis" class="hidden p-3 bg-gray-900 border border-gray-700 text-xs space-y-2">
+                <div class="text-[var(--secondary)] font-bold" id="trip-log">CALCULATING...</div>
+                <div class="grid grid-cols-2 gap-2 text-[10px] mt-2">
+                    <div class="border border-gray-700 p-1 text-center">
+                        <div class="text-gray-500">RANGE</div>
+                        <div class="text-white font-bold" id="trip-dist">--</div>
+                    </div>
+                    <div class="border border-gray-700 p-1 text-center">
+                        <div class="text-gray-500">THREAT</div>
+                        <div class="text-[var(--alert)] font-bold" id="trip-threat">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="analyzeTrip()" class="btn-action w-full py-3" id="trip-btn">
+                <i class="fa-solid fa-location-crosshairs"></i> CALCULATE
+            </button>
+            <button onclick="toggleTripModal()" class="text-xs text-gray-500 w-full text-center hover:text-white">CANCEL</button>
+        </div>
+    </div>
+
+    <!-- VAULT MODAL (AI) - NEW -->
+    <div id="vault-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="tech-panel w-full max-w-sm p-6 space-y-4 border-l-4 border-l-blue-500">
+            <h2 class="font-header text-xl text-blue-400">ARCHIVE QUERY</h2>
+            <div class="text-xs text-gray-400">Input technical issue. Accessing Universal Database.</div>
+            <input type="text" id="vault-query" class="tech-input w-full" placeholder="e.g. Dishwasher Error E4...">
+            
+            <button onclick="queryVault()" class="btn-action w-full py-3 text-blue-400 border-blue-400" id="vault-btn">
+                <i class="fa-solid fa-search"></i> SEARCH ARCHIVES
+            </button>
+            <button onclick="toggleVaultModal()" class="text-xs text-gray-500 w-full text-center hover:text-white">CANCEL</button>
+        </div>
+    </div>
+
+    <!-- CFO MODAL (AI) -->
+    <div id="cfo-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="tech-panel w-full max-w-sm p-6 space-y-4 border-l-4 border-l-[var(--primary)]">
+            <h2 class="font-header text-xl">PURCHASE ADVISOR</h2>
+            <div class="text-xs text-gray-400">Daily Limit: $42.50. Input potential expense.</div>
+            <div class="flex gap-2">
+                 <input type="text" id="cfo-item" class="tech-input flex-1" placeholder="Item Name...">
+                 <input type="number" id="cfo-price" class="tech-input w-20" placeholder="$">
+            </div>
+            
+            <div id="cfo-analysis" class="hidden p-3 bg-gray-900 border border-gray-700 text-xs space-y-2">
+                <div class="text-white font-bold" id="cfo-verdict">ANALYZING...</div>
+                <div class="text-gray-400 italic" id="cfo-reason">...</div>
+            </div>
+
+            <button onclick="analyzePurchase()" class="btn-action w-full py-3" id="cfo-btn">
+                <i class="fa-solid fa-scale-balanced"></i> EVALUATE
+            </button>
+            <button onclick="toggleCfoModal()" class="text-xs text-gray-500 w-full text-center hover:text-white">CANCEL</button>
+        </div>
+    </div>
+
+    <!-- GENERIC INFO MODAL (For Results) -->
+    <div id="info-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="tech-panel w-full max-w-sm p-6 space-y-4 max-h-[80vh] flex flex-col">
+            <h2 class="font-header text-xl text-[var(--secondary)]" id="info-title">DATA LINK</h2>
+            <div id="info-content" class="text-sm text-gray-300 ai-markdown overflow-y-auto"></div>
+            <button onclick="document.getElementById('info-modal').classList.add('hidden')" class="btn-action w-full py-2 mt-auto shrink-0">ACKNOWLEDGE</button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // --- STATE & CONFIG ---
+        let currentAiMode = 'auto'; // auto, gen, bib
+        const apiKey = localStorage.getItem('gemini_key') || '';
+        
+        // --- NAVIGATION LOGIC ---
+        function nav(viewId, el) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            const target = document.getElementById(`view-${viewId}`);
+            target.classList.remove('hidden');
+            target.classList.remove('animate-fade-in');
+            void target.offsetWidth;
+            target.classList.add('animate-fade-in');
+        }
+
+        // --- SABBATH MODE LOGIC ---
+        function checkSabbath() {
+            const now = new Date();
+            const day = now.getDay();
+            const hour = now.getHours();
+            let isSabbath = (day === 5 && hour >= 18) || (day === 6 && hour < 18);
+
+            const body = document.body;
+            const modeIcon = document.getElementById('mode-icon');
+
+            if (isSabbath) {
+                body.classList.add('mode-sabbath');
+                modeIcon.innerText = "🛑";
+                document.querySelectorAll('.commerce-btn').forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = "0.3";
+                });
+                setAiMode('bib');
+                document.getElementById('ai-toggle-container').style.display = 'none';
+            } else {
+                body.classList.remove('mode-sabbath');
+                if(currentAiMode === 'bib' && document.getElementById('ai-toggle-container').style.display === 'none') {
+                     setAiMode('auto');
+                }
+                modeIcon.innerText = currentAiMode === 'bib' ? "✝️" : "🤖";
+                document.getElementById('ai-toggle-container').style.display = 'flex';
+                document.querySelectorAll('.commerce-btn').forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.opacity = "1";
+                });
+            }
+        }
+
+        // --- AI LOGIC ---
+        function setAiMode(mode) {
+            currentAiMode = mode;
+            ['auto','gen','bib'].forEach(m => {
+                const btn = document.getElementById(`mode-${m}`);
+                if(m === mode) {
+                    btn.classList.add('bg-[var(--primary)]', 'text-black');
+                    btn.classList.remove('text-gray-500');
+                } else {
+                    btn.classList.remove('bg-[var(--primary)]', 'text-black');
+                    btn.classList.add('text-gray-500');
+                }
+            });
+            if (!document.body.classList.contains('mode-sabbath')) {
+                const icon = document.getElementById('mode-icon');
+                if (mode === 'bib') icon.innerText = "✝️";
+                else icon.innerText = "🤖";
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            input.value = '';
+            const loadingId = addMessage("Thinking...", 'ai');
+
+            let sysPrompt = "You are Beacon OS, a helpful family assistant.";
+            if (currentAiMode === 'bib' || document.body.classList.contains('mode-sabbath')) {
+                sysPrompt = "You are a Biblical Advisor AI. Answer with wisdom from scripture. Keep tone gentle.";
+            } else if (currentAiMode === 'gen') {
+                sysPrompt = "You are a General Strategy AI. Provide efficient, logical answers. Use military terminology.";
+            }
+
+            const response = await callGemini(text, sysPrompt);
+            document.getElementById(loadingId).remove();
+            addMessage(response || "Comms Offline. Check API Key.", 'ai');
+        }
+
+        function addMessage(text, type) {
+            const feed = document.getElementById('chat-feed');
+            const div = document.createElement('div');
+            div.id = 'msg-' + Date.now();
+            div.className = type === 'user' ? 'msg-user p-3 max-w-[80%] text-sm' : 'msg-ai p-3 max-w-[80%] text-sm';
+            
+            let html = text;
+            if (type === 'ai') html = `<div class="text-[9px] opacity-50 mb-1">${currentAiMode.toUpperCase()} AI</div>${text}`;
+            div.innerHTML = html;
+            feed.appendChild(div);
+            feed.scrollTop = feed.scrollHeight;
+            return div.id;
+        }
+
+        // --- NEW AI FEATURES ---
+        
+        // 1. Task Analysis
+        function toggleTaskModal() {
+            const m = document.getElementById('task-modal');
+            m.classList.toggle('hidden');
+            if(!m.classList.contains('hidden')) {
+                document.getElementById('task-desc').value = '';
+                document.getElementById('task-analysis').classList.add('hidden');
+                document.getElementById('analyze-btn').innerHTML = '<i class="fa-solid fa-microchip"></i> ANALYZE';
+            }
+        }
+
+        async function analyzeTask() {
+            const task = document.getElementById('task-desc').value;
+            if(!task) return;
+            
+            const btn = document.getElementById('analyze-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> CALCULATING...';
+            
+            const sys = "You are a Gamification Command AI. User inputs a chore. You output JSON: { 'title': 'Military Style Mission Name', 'tier': 'Tier 1-5', 'xp': '50-500 XP Value' }.";
+            const res = await callGemini(`Analyze this task: ${task}. JSON only.`, sys);
+            
+            try {
+                const cleanJson = res.replace(/```json|```/g, '').trim();
+                const data = JSON.parse(cleanJson);
+                
+                document.getElementById('task-title').innerText = data.title;
+                document.getElementById('task-tier').innerText = data.tier;
+                document.getElementById('task-xp').innerText = data.xp + " XP";
+                
+                document.getElementById('task-analysis').classList.remove('hidden');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> CONFIRM LOG';
+                btn.onclick = () => { toggleTaskModal(); alert(`Logged ${data.xp} XP for ${data.title}`); };
+            } catch (e) {
+                alert("AI Analysis Error. Try again.");
+                btn.innerHTML = 'RETRY';
+            }
+        }
+
+        // 2. Ration Planning
+        async function generateRations() {
+            const btn = document.querySelector('button[onclick="generateRations()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> PLANNING...';
+
+            const items = document.getElementById('pantry-list').innerText;
+            const sys = "You are a Tactical Survival AI. Based on the provided low-stock ingredients and assuming basic staples, generate a 'Daily Ration Protocol' (Meal Plan). Format as a brief military briefing using HTML tags (<b>, <ul>, <li>).";
+            
+            const res = await callGemini(`Low Stock Assets: ${items}`, sys);
+            
+            document.getElementById('info-title').innerText = "RATION PROTOCOL";
+            document.getElementById('info-content').innerHTML = res;
+            document.getElementById('info-modal').classList.remove('hidden');
+            
+            btn.innerHTML = originalText;
+        }
+
+        // 3. CFO Purchase Advisor
+        function toggleCfoModal() {
+            const m = document.getElementById('cfo-modal');
+            m.classList.toggle('hidden');
+            if (!m.classList.contains('hidden')) {
+                document.getElementById('cfo-analysis').classList.add('hidden');
+                document.getElementById('cfo-btn').innerText = "EVALUATE";
+            }
+        }
+
+        async function analyzePurchase() {
+            const item = document.getElementById('cfo-item').value;
+            const price = document.getElementById('cfo-price').value;
+            if(!item || !price) return;
+
+            const btn = document.getElementById('cfo-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> COMPUTING...';
+
+            let modeDesc = "Tactical Efficiency (Resource Management)";
+            if(currentAiMode === 'bib' || document.body.classList.contains('mode-sabbath')) modeDesc = "Biblical Stewardship (Necessity & Wisdom)";
+
+            const sys = `You are a CFO AI. Mode: ${modeDesc}. Safe daily limit: $42.50. User wants: ${item} for $${price}. Return JSON: { "verdict": "AUTHORIZED" or "DENIED", "reason": "Short 1 sentence reason" }.`;
+            const res = await callGemini(`Evaluate purchase: ${item} $${price}`, sys);
+
+            try {
+                const cleanJson = res.replace(/```json|```/g, '').trim();
+                const data = JSON.parse(cleanJson);
+
+                const vEl = document.getElementById('cfo-verdict');
+                vEl.innerText = data.verdict;
+                vEl.style.color = data.verdict === "AUTHORIZED" ? "var(--secondary)" : "var(--alert)";
+                document.getElementById('cfo-reason').innerText = data.reason;
+                document.getElementById('cfo-analysis').classList.remove('hidden');
+                btn.innerText = "DONE";
+                btn.onclick = toggleCfoModal;
+            } catch (e) {
+                alert("Evaluation Failed");
+                btn.innerText = "RETRY";
+            }
+        }
+
+        // 4. Sentry Threat Scan
+        async function runSentryScan() {
+            const btn = document.querySelector('button[onclick="runSentryScan()"]');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-radar fa-spin"></i> SCANNING...';
+
+            const sys = "You are a Sci-Fi Security AI. Generate a 'Threat Assessment Report' for a network of 14 devices. Invent one minor 'Anomaly' (e.g. unknown encryption signature from Toaster). Use techno-babble. Keep it brief. Use HTML tags.";
+            const res = await callGemini("Run diagnostics.", sys);
+
+            document.getElementById('info-title').innerText = "NETWORK DIAGNOSTICS";
+            document.getElementById('info-content').innerHTML = res;
+            document.getElementById('info-modal').classList.remove('hidden');
+            btn.innerHTML = originalHTML;
+        }
+
+        // 5. Tactical Trip Logger (OPS) - NEW
+        function toggleTripModal() {
+            const m = document.getElementById('trip-modal');
+            m.classList.toggle('hidden');
+            if(!m.classList.contains('hidden')) {
+                document.getElementById('trip-analysis').classList.add('hidden');
+                document.getElementById('trip-btn').innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> CALCULATE';
+            }
+        }
+
+        async function analyzeTrip() {
+            const dest = document.getElementById('trip-dest').value;
+            const purpose = document.getElementById('trip-purpose').value;
+            if(!dest || !purpose) return;
+
+            const btn = document.getElementById('trip-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> CALCULATING...';
+
+            const sys = "You are a Military Navigation AI. User is going to [Dest] for [Reason]. Estimate mileage (guess), assign a Threat Level (Low/Med/High), and write a 1-sentence Mission Log entry. JSON: {distance: '15 MILES', threat: 'LOW', log: 'SHORT SENTENCE'}.";
+            const res = await callGemini(`Trip to ${dest} for ${purpose}. JSON only.`, sys);
+
+            try {
+                const cleanJson = res.replace(/```json|```/g, '').trim();
+                const data = JSON.parse(cleanJson);
+                
+                document.getElementById('trip-log').innerText = data.log.toUpperCase();
+                document.getElementById('trip-dist').innerText = data.distance;
+                document.getElementById('trip-threat').innerText = data.threat;
+                document.getElementById('trip-threat').style.color = data.threat === 'HIGH' ? 'var(--alert)' : 'var(--secondary)';
+                
+                document.getElementById('trip-analysis').classList.remove('hidden');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> LOG MISSION';
+                btn.onclick = () => { toggleTripModal(); alert(`Mission Logged: ${data.log}`); };
+            } catch(e) {
+                alert("Nav Error");
+                btn.innerText = "RETRY";
+            }
+        }
+
+        // 6. Vault Tech Support (TOOLS) - NEW
+        function toggleVaultModal() {
+            document.getElementById('vault-modal').classList.toggle('hidden');
+        }
+
+        async function queryVault() {
+            const query = document.getElementById('vault-query').value;
+            if(!query) return;
+
+            const btn = document.getElementById('vault-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SEARCHING...';
+
+            const sys = "You are an Engineering Repair Droid. User asks: [Query]. Provide a technical repair sequence (step-by-step). Use HTML list tags (<ul>, <li>). Keep it brief and technical.";
+            const res = await callGemini(query, sys);
+
+            document.getElementById('info-title').innerText = "ARCHIVE RETRIEVAL";
+            document.getElementById('info-content').innerHTML = res;
+            toggleVaultModal();
+            document.getElementById('info-modal').classList.remove('hidden');
+            btn.innerHTML = '<i class="fa-solid fa-search"></i> SEARCH ARCHIVES';
+        }
+
+        // --- CORE API CALLER ---
+        async function callGemini(prompt, sys) {
+            const key = document.getElementById('api-key-input').value || apiKey;
+            if (!key) return "API Key Missing in Settings.";
+
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${key}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        contents: [{parts: [{text: prompt}]}],
+                        systemInstruction: {parts: [{text: sys}]}
+                    })
+                });
+                const data = await res.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Transmission Error.";
+            } catch (e) {
+                return "Connection Error.";
+            }
+        }
+
+        // --- INIT ---
+        function toggleSettings() {
+            document.getElementById('settings-modal').classList.toggle('hidden');
+        }
+
+        window.onload = () => {
+            initStarfield();
+            checkSabbath();
+            setInterval(checkSabbath, 60000); 
+            if(apiKey) document.getElementById('api-key-input').value = apiKey;
+            document.getElementById('api-key-input').addEventListener('change', (e) => localStorage.setItem('gemini_key', e.target.value));
+        };
+
+        function initStarfield() {
+            const canvas = document.getElementById('starfield');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            const stars = Array.from({length: 80}, () => ({x: Math.random()*canvas.width, y: Math.random()*canvas.height, a: Math.random()}));
+            function animate() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle = "white";
+                stars.forEach(s => {
+                    ctx.globalAlpha = s.a; ctx.fillRect(s.x,s.y,1,1);
+                    s.a += (Math.random()-0.5)*0.05; if(s.a<0)s.a=0; if(s.a>1)s.a=1;
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>
